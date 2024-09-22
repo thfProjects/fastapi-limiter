@@ -2,10 +2,10 @@ from contextlib import asynccontextmanager
 
 import redis.asyncio as redis
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, WebSocket
+from fastapi import Depends, FastAPI
 
 from fastapi_limiter import FastAPILimiter
-from fastapi_limiter.depends import RateLimiter, WebSocketRateLimiter
+from fastapi_limiter.depends import RateLimiter
 
 
 @asynccontextmanager
@@ -40,18 +40,5 @@ async def multiple():
     return {"msg": "Hello World"}
 
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    ratelimit = WebSocketRateLimiter(times=1, seconds=5)
-    while True:
-        try:
-            data = await websocket.receive_text()
-            await ratelimit(websocket, context_key=data)  # NB: context_key is optional
-            await websocket.send_text("Hello, world")
-        except HTTPException:
-            await websocket.send_text("Hello again")
-
-
 if __name__ == "__main__":
-    uvicorn.run("main:app", debug=True, reload=True)
+    uvicorn.run("main:app", reload=True)
