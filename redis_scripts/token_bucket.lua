@@ -10,7 +10,7 @@ if has_bucket then
     if current_tokens - 1 < 0 then
         return expire_time - remaining_full_refills * refill_time
     else
-        redis.call("SET", key, 1, "px", expire_time + refill_time)
+        redis.call("PEXPIRE", key, expire_time + refill_time)
         return 0
     end
 else
