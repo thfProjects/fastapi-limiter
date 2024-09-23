@@ -1,4 +1,3 @@
-import os.path
 from typing import Annotated, Callable, Optional
 from pathlib import Path
 
@@ -43,7 +42,7 @@ class BaseRateLimiter:
         except pyredis.exceptions.NoScriptError:
             await self._update_lua_sha()
             pexpire = await self._check(key)
-        if pexpire != 0:
+        if pexpire > 0:
             return await callback(request, pexpire)
 
 
@@ -69,3 +68,24 @@ class FixedWindowRateLimiter(BaseRateLimiter):
 
     async def _check(self, key: str) -> int:
         return await FastAPILimiter.redis.evalsha(self.lua_sha, 1, key, str(self.times), str(self.milliseconds))
+
+
+class TokenBucketRateLimiter(BaseRateLimiter):
+    lua_script = Path(REDIS_SCRIPTS_PATH, 'token_bucket.lua').read_text()
+
+    def __init__(
+            self,
+            capacity: Annotated[int, Field(ge=1)] = 1,
+            refill_rate: Annotated[int, Field(ge=1)] = 1,
+            identifier: Optional[Callable] = None,
+            callback: Optional[Callable] = None
+    ):
+        super().__init__(
+            identifier,
+            callback
+        )
+        self.capacity = capacity
+        self.refill_rate = refill_rate
+
+    async def _check(self, key: str) -> int:
+        return await FastAPILimiter.redis.evalsha(self.lua_sha, 1, key, str(self.capacity), str(self.refill_rate))
