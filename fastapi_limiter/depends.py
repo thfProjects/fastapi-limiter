@@ -6,7 +6,7 @@ from pydantic import Field
 from starlette.requests import Request
 
 from fastapi_limiter import FastAPILimiter
-from definitions import REDIS_SCRIPTS_PATH
+from fastapi_limiter._definitions import REDIS_SCRIPTS_PATH
 
 
 class BaseRateLimiter:
