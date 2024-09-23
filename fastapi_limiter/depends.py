@@ -76,7 +76,7 @@ class TokenBucketRateLimiter(BaseRateLimiter):
     def __init__(
             self,
             capacity: Annotated[int, Field(ge=1)] = 1,
-            refill_rate: Annotated[int, Field(ge=1)] = 1,
+            refill_interval: Annotated[int, Field(ge=1)] = 1,
             identifier: Optional[Callable] = None,
             callback: Optional[Callable] = None
     ):
@@ -85,7 +85,7 @@ class TokenBucketRateLimiter(BaseRateLimiter):
             callback
         )
         self.capacity = capacity
-        self.refill_rate = refill_rate
+        self.refill_interval = refill_interval
 
     async def _check(self, key: str) -> int:
-        return await FastAPILimiter.redis.evalsha(self.lua_sha, 1, key, str(self.capacity), str(self.refill_rate))
+        return await FastAPILimiter.redis.evalsha(self.lua_sha, 1, key, str(self.capacity), str(self.refill_interval))
